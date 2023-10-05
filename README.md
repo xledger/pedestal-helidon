@@ -1,73 +1,29 @@
-# mīnā
+# pedestal-helidon
 
-[![Clojars Project](https://img.shields.io/clojars/v/com.s-exp/mina.svg)](https://clojars.org/com.s-exp/mina)
+NOTE: This is just a fork of [Mina](https://github.com/mpenet/mina) to work for pedestal instead of ring.
 
-[Helidon/Nima](https://helidon.io/nima) [RING](https://github.com/ring-clojure/ring/blob/master/SPEC) compliant adapter for clojure, loom based 
+[Helidon/Nima](https://helidon.io/nima) [Pedestal](https://github.com/pedestal/pedestal) compliant adapter for clojure, loom based 
 
 **Warning** It's early days so expect breakage.
 
 [Helidon/Nima](https://helidon.io/nima) is alpha status right now, so do not use this in prod please. 
 
-## Usage
-
-```clojure
-(require '[s-exp.mina :as mina])
-
-(def server
-  (mina/start! (fn [{:as request :keys [body headers ...]}]
-                  {:status 200
-                   :body "Hello world"
-                   :headers {"Something" "Interesting"}})
-               {:port 8080}))
-;; ...
-
-(mina/stop! server)
-
-```
-
-There is nothing special to its API, you use mina as you would use any blocking
-http adapter like jetty; it is RING compliant so compatible with most/all
-middlewares out there.
-
-## Supported options
-
-* `:host` - host of the default socket, defaults to 127.0.0.1
-
-* `:port` - port the server listens to, defaults to random free port
-
-* `:write-queue-length` 
-
-* `:backlog` 
-
-* `:max-payload-size` 
-
-* `:write-queue-length`
-
-* `:receive-buffer-size` 
-
-* `:connection-options`(map-of `:socket-receive-buffer-size` `:socket-send-buffer-size` `:socket-reuse-address` `:socket-keep-alive` `:tcp-no-delay` `:read-timeout` `:connect-timeout`)
-
-* `:tls` - A `io.helidon.nima.common.tls.Tls` instance
-
-
-You can hook into the server builder via `s-exp.mina.options/set-server-option!`
-multimethod at runtime and add/modify whatever you want if you need anything
-extra we don't provide (yet).
-
-http2 (h2 & h2c) is supported out of the box, iif a client connects with http2
-it will do the protocol switch automatically.
-
 ## Installation
 
 Note: You need to use java **21**
 
-https://clojars.org/com.s-exp/mina
+## Usage:
 
-## Running the tests 
+In your pedestal service map:
 
+```clojure
+{ ...
+  ::http/type                  pedestal-helidon/helidon-server-fn
+  ::http/chain-provider        pedestal-helidon/direct-helidon-provider
+...}
 ```
-clj -X:test s-exp.mina-test-runner/run
-```
+
+The rest should be the same as before.
 
 ## Implemented
 
@@ -76,6 +32,7 @@ clj -X:test s-exp.mina-test-runner/run
 
 ## License
 
-Copyright © 2023 Max Penet
+Copyright © 2023 Max Penet 
+Copyright © 2023 Xledger
 
 Distributed under the Eclipse Public License version 1.

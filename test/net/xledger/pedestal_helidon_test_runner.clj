@@ -1,4 +1,4 @@
-(ns s-exp.mina-test-runner
+(ns net.xledger.pedestal-helidon-test-runner
   (:gen-class)
   (:require [clojure.test]
             eftest.report.pretty

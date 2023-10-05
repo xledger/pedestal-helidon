@@ -1,4 +1,4 @@
-(ns s-exp.mina.response
+(ns net.xledger.pedestal-helidon.response
   (:import (io.helidon.http Http$Headers
                             Http$HeaderNames
                             Http$HeaderName

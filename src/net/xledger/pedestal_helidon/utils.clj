@@ -1,4 +1,4 @@
-(ns s-exp.mina.utils
+(ns net.xledger.pedestal-helidon.utils
   (:require [clojure.string :as str]))
 
 (defn camel->dashed

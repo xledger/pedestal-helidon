@@ -25,6 +25,10 @@ In your pedestal service map:
 
 The rest should be the same as before.
 
+## Running the tests
+
+`clj -X:test net.xledger.pedestal-helidon-test-runner/run`
+
 ## Implemented
 
 - [x] HTTP (1.1 & 2) server/handlers

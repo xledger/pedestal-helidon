@@ -1,3 +1,6 @@
+[![Clojars
+Project](https://img.shields.io/clojars/v/net.xledger/pedestal-helidon.svg)](https://clojars.org/net.xledger/pedestal-helidon)
+
 # pedestal-helidon
 
 NOTE: This builds on [Mina](https://github.com/mpenet/mina) to add adapters for pedestal. Originally, it was a complete fork.

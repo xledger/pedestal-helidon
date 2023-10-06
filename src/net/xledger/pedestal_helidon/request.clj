@@ -24,6 +24,7 @@
                        (.assoc :ssl-client-cert (zmap/delay (some-> server-request .remotePeer .tlsCertificates (.orElse nil) first)))
 
                        ;; realized
+                       (.assoc :uri (.rawPath (.path server-request)))
                        (.assoc :path-info (.rawPath (.path server-request)))
                        (.assoc :scheme (if (.isSecure server-request) "https" "http"))
                        (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))

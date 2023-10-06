@@ -1,25 +1,16 @@
 (ns net.xledger.pedestal-helidon
   (:require [io.pedestal.interceptor.chain :as chain]
-            [net.xledger.pedestal-helidon.handler]
-            [net.xledger.pedestal-helidon.options :as options]
+            [s-exp.mina :as mina]
+            [s-exp.mina.options]
+            [s-exp.mina.response]
             [io.pedestal.http :as-alias http]
             [io.pedestal.http.route]
-            [net.xledger.pedestal-helidon.request :as request]
-            [net.xledger.pedestal-helidon.response :as response])
-  (:import (io.helidon.webserver WebServer WebServerConfig WebServerConfig$Builder)
-           (io.helidon.webserver.http Handler HttpRouting)))
+            [net.xledger.pedestal-helidon.request :as request])
+  (:import (io.helidon.webserver WebServer WebServerConfig$Builder)
+           (io.helidon.webserver.http Handler HttpRouting)
+           (io.helidon.webserver.http ServerRequest ServerResponse)))
 
 (set! *warn-on-reflection* true)
-
-(def default-options {:connection-provider false})
-
-(defn- server-builder
-  ^WebServerConfig$Builder
-  [options]
-  (reduce (fn [builder [k v]]
-            (options/set-server-option! builder k v options))
-    (WebServerConfig/builder)
-    options))
 
 (defn direct-helidon-provider
   "Given a service-map,
@@ -45,7 +36,17 @@
         (handle [_ server-request server-response]
           (let [initial-context (request/pedestal-context server-request server-response)
                 resp-ctx (chain/execute initial-context interceptors)]
-            (response/set-response! server-response (:response resp-ctx))))))))
+            (s-exp.mina.response/set-response! server-response (:response resp-ctx))))))))
+
+(defmethod s-exp.mina.options/set-server-option! ::pedestal-handler
+  [^WebServerConfig$Builder builder k handler _options]
+  (doto builder
+    (.addRouting
+      (.build
+        (doto (HttpRouting/builder)
+          (.any
+            ^"[Lio.helidon.webserver.http.Handler;"
+            (into-array Handler [^Handler handler])))))))
 
 (defn helidon-server-fn
   "Given a service map (with interceptor provider established) and a server-opts map,
@@ -57,14 +58,11 @@
          :or   {host  "127.0.0.1"
                 port  8080
                 join? false}} server-opts
-        server (-> (server-builder
-                     (-> default-options
-                       (merge server-opts)
-                       (assoc :handler handler)))
-                 .build)]
+        mina-options (-> server-opts (assoc ::pedestal-handler handler))
+        server ^WebServer (mina/start! mina-options)]
     {:server   server
      :start-fn (fn [] (.start server))
-     :stop-fn  (fn [] (.stop server) server)}))
+     :stop-fn  (fn [] (doto server .stop))}))
 
 ;; (def r {:status 200})
 ;; (def h (fn [req]

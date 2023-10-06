@@ -1,6 +1,6 @@
 # pedestal-helidon
 
-NOTE: This is just a fork of [Mina](https://github.com/mpenet/mina) to work for pedestal instead of ring.
+NOTE: This builds on [Mina](https://github.com/mpenet/mina) to add adapters for pedestal. Originally, it was a complete fork.
 
 [Helidon/Nima](https://helidon.io/nima) [Pedestal](https://github.com/pedestal/pedestal) compliant adapter for clojure, loom based 
 

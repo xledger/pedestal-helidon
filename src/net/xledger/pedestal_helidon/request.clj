@@ -1,178 +1,11 @@
 (ns net.xledger.pedestal-helidon.request
-  (:require [clojure.string :as str]
+  (:require [s-exp.mina.request]
             [strojure.zmap.core :as zmap])
-  (:import (clojure.lang
-             IEditableCollection
-             IFn
-             IKVReduce
-             IPersistentMap
-             MapEntry
-             MapEquivalence
-             PersistentHashMap
-             Util)
-           (io.helidon.common.uri UriInfoBlueprint)
-           (io.helidon.http
-             Headers
-             Http$Header
-             Http$HeaderName
-             Http$HeaderNames
-             ServerRequestHeaders)
-           (io.helidon.webserver.http ServerRequest ServerResponse)
-           (java.net URI)
-           (java.util Map)))
+  (:import (clojure.lang PersistentHashMap)
+           (io.helidon.webserver.http ServerRequest ServerResponse)))
 
-(defn header-name ^Http$HeaderName
-  [s]
-  (Http$HeaderNames/createFromLowercase s))
-
-(defn header->value*
-  ([^Headers header header-name]
-   (header->value* header header-name nil))
-  ([^Headers header
-    ^Http$HeaderName header-name not-found]
-   (-> header
-     (.value header-name)
-     (.orElse not-found))))
-
-(defn header->value
-  ([^Headers h k]
-   (header->value h k nil))
-  ([^Headers h k not-found]
-   (header->value* h
-     (header-name k)
-     not-found)))
-
-(defn ring-headers*
-  [^Headers headers]
-  (-> (reduce (fn [m ^Http$Header h]
-                (assoc! m
-                  (.lowerCase (.headerName h))
-                  (.value h)))
-        (transient {})
-        headers)
-    persistent!))
-
-(defprotocol RingHeaders
-  (^clojure.lang.APersistentMap ring-headers [_]))
-
-(defn ring-method
-  [^ServerRequest server-request]
-  (let [method (-> server-request
-                 .prologue
-                 .method
-                 .text)]
-    ;; mess with the string as a last resort, try to match against static values
-    ;; first
-    (case method
-      "GET" :get
-      "POST" :post
-      "PUT" :put
-      "DELETE" :delete
-      "HEAD" :head
-      "OPTIONS" :options
-      "TRACE" :trace
-      "PATCH" :patch
-      (keyword (str/lower-case method)))))
-
-(defn ring-protocol
-  [^ServerRequest server-request]
-  (case (-> server-request
-          .prologue
-          .protocolVersion)
-    "1.0" "HTTP/1.0"
-    "1.1" "HTTP/1.1"
-    "2.0" "HTTP/2"))
-
-;; inspired by ring-undertow
-(deftype HeaderMapProxy [^Headers headers
-                         ^:volatile-mutable persistent-copy]
-  Map
-  (size [_]
-    (.size headers))
-
-  (get [_ k]
-    (header->value headers k))
-
-  MapEquivalence
-
-  IFn
-  (invoke [_ k]
-    (header->value headers k))
-
-  (invoke [_this k not-found]
-    (header->value headers k not-found))
-
-  IPersistentMap
-  (valAt [_ k]
-    (header->value headers k))
-
-  (valAt [_ k not-found]
-    (header->value headers k not-found))
-
-  (entryAt [_ k]
-    (let [hn (header-name k)]
-      (when-let [v (header->value* headers hn)]
-        (MapEntry. (.lowerCase hn) v))))
-
-  (containsKey [_ k]
-    (.contains headers (header-name k)))
-
-  (assoc [this k v]
-    (-> (ring-headers this)
-      (.assoc k v)))
-
-  (assocEx [this k v]
-    (if (.containsKey this k)
-      (throw (Util/runtimeException "Key already present"))
-      (.assoc this k v)))
-
-  (cons [this o]
-    (-> (ring-headers this)
-      (.cons o)))
-
-  (without [this k]
-    (-> (ring-headers this)
-      (.without k)))
-
-  (empty [_]
-    {})
-
-  (count [_]
-    (.size headers))
-
-  (seq [this]
-    (.seq (ring-headers this)))
-
-  (equiv [this o]
-    (= o (ring-headers this)))
-
-  (iterator [_]
-    (->> headers
-      .iterator
-      (eduction (map (fn [^Http$Header header]
-                       (MapEntry. (.lowerCase (.headerName header))
-                         (.value header)))))))
-
-  IKVReduce
-  (kvreduce [this f init]
-    (.kvreduce ^IKVReduce
-      (ring-headers this)
-      f
-      init))
-
-  IEditableCollection
-  (asTransient [this]
-    (transient (ring-headers this)))
-
-  RingHeaders
-  (ring-headers
-    [_]
-    (or persistent-copy
-      (set! persistent-copy (ring-headers* headers))))
-
-  Object
-  (toString [_]
-    (.toString headers)))
+;; Pasted and adapted from mina's request.clj:
+;; https://github.com/mpenet/mina/blob/57981ef805b921567373812cb7cd7549c57dfef4/src/s_exp/mina/request.clj
 
 (defn pedestal-context
   [^ServerRequest server-request
@@ -181,7 +14,7 @@
              (when (not= "" query) query))
         body (let [content (.content server-request)]
                (when-not (.consumed content) (.inputStream content)))
-        ring-request (-> (.asTransient PersistentHashMap/EMPTY)
+        request (-> (.asTransient PersistentHashMap/EMPTY)
                        ;; delayed
                        (.assoc :server-port (zmap/delay (.port (.localPeer server-request))))
                        (.assoc :server-name (zmap/delay (.host (.localPeer server-request))))
@@ -193,14 +26,14 @@
                        ;; realized
                        (.assoc :path-info (.rawPath (.path server-request)))
                        (.assoc :scheme (if (.isSecure server-request) "https" "http"))
-                       (.assoc :protocol (ring-protocol server-request))
-                       (.assoc :request-method (ring-method server-request))
-                       (.assoc :headers (->HeaderMapProxy (.headers server-request) nil))
+                       (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))
+                       (.assoc :request-method (s-exp.mina.request/ring-method server-request))
+                       (.assoc :headers (s-exp.mina.request/->HeaderMapProxy (.headers server-request) nil))
 
                        (.assoc ::server-request server-request)
                        (.assoc ::server-response server-response))
         ;; optional
-        request (cond-> ring-request
+        request (cond-> request
                   qs (.assoc :query-string qs)
                   body (.assoc :body body))]
     {:request (zmap/wrap (.persistent request))

@@ -100,6 +100,13 @@
   (with-server {:handler (fn [req] {:body (java.io.ByteArrayInputStream. (.getBytes "yes"))})}
     (is (-> (client/get *endpoint*) :body (= "yes")))))
 
+(deftest content-type
+  (with-server {:handler (fn [req]
+                           {:body (:content-type req)})}
+    (is (-> (client/post *endpoint* {:content-type "application/foo" :body "hm"})
+          :body
+          (= "application/foo")))))
+
 (defn tls []
   (let [b (doto (TlsConfig/builder)
             (.sslContext (ls/ssl-context "test/server.key"

@@ -30,6 +30,10 @@
                   (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))
                   (.assoc :request-method (s-exp.mina.request/ring-method server-request))
                   (.assoc :headers (s-exp.mina.request/->HeaderMapProxy (.headers server-request) nil))
+                  ;; Required by interceptors like :body-params in pedestal
+                  (.assoc :content-type (s-exp.mina.request/header->value
+                                          (.headers server-request)
+                                          "content-type" nil))
 
                   (.assoc ::server-request server-request)
                   (.assoc ::server-response server-response))

@@ -25,10 +25,7 @@
    * Call the list of functions in :enter-async when going async.  Use these to toggle async mode on the container
    * Will use the fn at :async? to determine if the chain has been operating in async mode (so the container can handle on the outbound)"
   [service-map]
-  (let [interceptors (::http/interceptors service-map)
-        routes (::http/routes service-map)
-        routes (if (fn? routes) (routes) routes)
-        router (some-> routes io.pedestal.http.route/router)]
+  (let [interceptors (::http/interceptors service-map)]
     (assoc service-map ::handler
       (reify Handler
         (handle [_ server-request server-response]

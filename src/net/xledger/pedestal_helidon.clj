@@ -28,9 +28,7 @@
   (let [interceptors (::http/interceptors service-map)
         routes (::http/routes service-map)
         routes (if (fn? routes) (routes) routes)
-        router (some-> routes io.pedestal.http.route/router)
-        interceptors (if router (conj interceptors router)
-                       interceptors)]
+        router (some-> routes io.pedestal.http.route/router)]
     (assoc service-map ::handler
       (reify Handler
         (handle [_ server-request server-response]

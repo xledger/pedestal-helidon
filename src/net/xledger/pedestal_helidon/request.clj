@@ -15,27 +15,27 @@
         body (let [content (.content server-request)]
                (when-not (.consumed content) (.inputStream content)))
         request (-> (.asTransient PersistentHashMap/EMPTY)
-                       ;; delayed
-                       (.assoc :server-port (zmap/delay (.port (.localPeer server-request))))
-                       (.assoc :server-name (zmap/delay (.host (.localPeer server-request))))
-                       (.assoc :remote-addr (zmap/delay
-                                              (let [address ^java.net.InetSocketAddress (.address (.remotePeer server-request))]
-                                                (-> address .getAddress .getHostAddress))))
-                       (.assoc :ssl-client-cert (zmap/delay (some-> server-request .remotePeer .tlsCertificates (.orElse nil) first)))
+                  ;; delayed
+                  (.assoc :server-port (zmap/delay (.port (.localPeer server-request))))
+                  (.assoc :server-name (zmap/delay (.host (.localPeer server-request))))
+                  (.assoc :remote-addr (zmap/delay
+                                         (let [address ^java.net.InetSocketAddress (.address (.remotePeer server-request))]
+                                           (-> address .getAddress .getHostAddress))))
+                  (.assoc :ssl-client-cert (zmap/delay (some-> server-request .remotePeer .tlsCertificates (.orElse nil) first)))
 
-                       ;; realized
-                       (.assoc :uri (.rawPath (.path server-request)))
-                       (.assoc :path-info (.rawPath (.path server-request)))
-                       (.assoc :scheme (if (.isSecure server-request) "https" "http"))
-                       (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))
-                       (.assoc :request-method (s-exp.mina.request/ring-method server-request))
-                       (.assoc :headers (s-exp.mina.request/->HeaderMapProxy (.headers server-request) nil))
+                  ;; realized
+                  (.assoc :uri (.rawPath (.path server-request)))
+                  (.assoc :path-info (.rawPath (.path server-request)))
+                  (.assoc :scheme (if (.isSecure server-request) "https" "http"))
+                  (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))
+                  (.assoc :request-method (s-exp.mina.request/ring-method server-request))
+                  (.assoc :headers (s-exp.mina.request/->HeaderMapProxy (.headers server-request) nil))
 
-                       (.assoc ::server-request server-request)
-                       (.assoc ::server-response server-response))
+                  (.assoc ::server-request server-request)
+                  (.assoc ::server-response server-response))
         ;; optional
         request (cond-> request
                   qs (.assoc :query-string qs)
                   body (.assoc :body body))]
-    {:request (zmap/wrap (.persistent request))
+    {:request  (zmap/wrap (.persistent request))
      :response {}}))

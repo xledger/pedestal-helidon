@@ -1,5 +1,4 @@
-[![Clojars
-Project](https://img.shields.io/clojars/v/net.xledger/pedestal-helidon.svg)](https://clojars.org/net.xledger/pedestal-helidon)
+[![Clojars Project](https://img.shields.io/clojars/v/net.xledger/pedestal-helidon.svg?include_prereleases)](https://clojars.org/net.xledger/pedestal-helidon)
 
 # pedestal-helidon
 

@@ -2,7 +2,7 @@
 
 # pedestal-helidon
 
-NOTE: This builds on [Mina](https://github.com/mpenet/mina) to add adapters for pedestal. Originally, it was a complete fork.
+NOTE: This builds on [Hirundo](https://github.com/mpenet/hirundo) to add adapters for pedestal. Originally, it was a complete fork.
 
 [Helidon/Nima](https://helidon.io/nima) [Pedestal](https://github.com/pedestal/pedestal) compliant adapter for clojure, loom based 
 

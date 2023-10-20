@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.12.0-alpha1"}
         io.pedestal/pedestal.service {:mvn/version "0.6.1"}
-        com.s-exp/mina {:mvn/version "0.1.20"}
+        com.s-exp/hirundo {:mvn/version "0.1.24"}
         javax.servlet/servlet-api {:mvn/version "2.5"}}
 
  :aliases

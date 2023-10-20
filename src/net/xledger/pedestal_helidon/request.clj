@@ -1,11 +1,14 @@
 (ns net.xledger.pedestal-helidon.request
-  (:require [s-exp.mina.request]
+  (:require [s-exp.hirundo.http.request :as h-request]
+            [s-exp.hirundo.http.header :as h-header]
             [strojure.zmap.core :as zmap])
   (:import (clojure.lang PersistentHashMap)
+           (io.helidon.common.uri UriQuery UriPath)
+           (io.helidon.http HttpPrologue Headers)
            (io.helidon.webserver.http ServerRequest ServerResponse)))
 
-;; Pasted and adapted from mina's request.clj:
-;; https://github.com/mpenet/mina/blob/57981ef805b921567373812cb7cd7549c57dfef4/src/s_exp/mina/request.clj
+;; Pasted and adapted from hirundo's request.clj:
+;; https://github.com/mpenet/hirundo/blob/5e00a749c41da574878704fba96566ff1867d849/src/s_exp/hirundo/http/request.clj
 
 (defn pedestal-context
   [^ServerRequest server-request
@@ -27,11 +30,11 @@
                   (.assoc :uri (.rawPath (.path server-request)))
                   (.assoc :path-info (.rawPath (.path server-request)))
                   (.assoc :scheme (if (.isSecure server-request) "https" "http"))
-                  (.assoc :protocol (s-exp.mina.request/ring-protocol server-request))
-                  (.assoc :request-method (s-exp.mina.request/ring-method server-request))
-                  (.assoc :headers (s-exp.mina.request/->HeaderMapProxy (.headers server-request) nil))
+                  (.assoc :protocol (h-request/ring-protocol (.prologue server-request)))
+                  (.assoc :request-method (h-request/ring-method (.prologue server-request)))
+                  (.assoc :headers (h-header/->HeaderMapProxy (.headers server-request) nil))
                   ;; Required by interceptors like :body-params in pedestal
-                  (.assoc :content-type (s-exp.mina.request/header->value
+                  (.assoc :content-type (h-header/header->value
                                           (.headers server-request)
                                           "content-type" nil))
 

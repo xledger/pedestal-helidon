@@ -1,8 +1,8 @@
 (ns net.xledger.pedestal-helidon
   (:require [io.pedestal.interceptor.chain :as chain]
-            [s-exp.mina :as mina]
-            [s-exp.mina.options]
-            [s-exp.mina.response]
+            [s-exp.hirundo :as hirundo]
+            [s-exp.hirundo.options]
+            [s-exp.hirundo.http.response :as h-response]
             [io.pedestal.http :as-alias http]
             [io.pedestal.http.route]
             [net.xledger.pedestal-helidon.request :as request])
@@ -31,9 +31,9 @@
         (handle [_ server-request server-response]
           (let [initial-context (request/pedestal-context server-request server-response)
                 resp-ctx (chain/execute initial-context interceptors)]
-            (s-exp.mina.response/set-response! server-response (:response resp-ctx))))))))
+            (h-response/set-response! server-response (:response resp-ctx))))))))
 
-(defmethod s-exp.mina.options/set-server-option! ::pedestal-handler
+(defmethod s-exp.hirundo.options/set-server-option! ::pedestal-handler
   [^WebServerConfig$Builder builder k handler _options]
   (doto builder
     (.addRouting
@@ -53,8 +53,8 @@
          :or   {host  "127.0.0.1"
                 port  8080
                 join? false}} server-opts
-        mina-options (-> server-opts (assoc ::pedestal-handler handler))
-        server ^WebServer (mina/start! mina-options)]
+        hirundo-options (-> server-opts (assoc ::pedestal-handler handler))
+        server ^WebServer (hirundo/start! hirundo-options)]
     {:server   server
      :start-fn (fn [] (.start server))
      :stop-fn  (fn [] (doto server .stop))}))
